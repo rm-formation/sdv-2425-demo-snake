@@ -1,0 +1,58 @@
+body {
+    height: 100vh;
+    margin: 0;
+    background-color: lightblue;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+main {
+    --gridSize: 0;
+    --hauteurMain: 50vh;
+    --hauteurCase: calc(var(--hauteurMain) / var(--gridSize));
+    position: relative;
+    height: var(--hauteurMain);
+    width: var(--hauteurMain);
+    background-color: lightgrey;
+    border-radius: 0.5rem;
+    border: 0.2rem solid darkslategrey;
+}
+
+.snake-block, .apple {
+    --x: 0;
+    --y: 0;
+
+    position: absolute;
+    top: calc(var(--hauteurCase) * var(--y));
+    left: calc(var(--hauteurCase) * var(--x));
+    height: var(--hauteurCase);
+    width: var(--hauteurCase); 
+    z-index: 5;
+}
+
+#snake-head {
+    background-color: limegreen;
+    z-index: 10;
+}
+
+.snake-block {
+    background-color: green;
+}
+
+.apple {
+    background-color: lightgoldenrodyellow;
+}
+
+.game-over {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    color: black;
+    font-family: "Press Start 2P", arial, sans-serif;
+    white-space: nowrap;
+    z-index: 100;
+}
