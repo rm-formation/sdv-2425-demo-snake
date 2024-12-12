@@ -6,6 +6,20 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+
+    font-family: "Press Start 2P", arial, sans-serif;
+}
+
+.settings > div {
+    font-size: 0.85rem;
+}
+
+.settings > div.active {
+    color: limegreen;
+}
+
+.settings > div.game:not(.active) {
+    color: darkred;
 }
 
 main {
@@ -20,6 +34,14 @@ main {
     border: 0.2rem solid darkslategrey;
 }
 
+main.debug::before {
+    content: "DEBUG";
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translateY(-100%);
+}
+
 .snake-block, .apple {
     --x: 0;
     --y: 0;
@@ -29,7 +51,27 @@ main {
     left: calc(var(--hauteurCase) * var(--x));
     height: var(--hauteurCase);
     width: var(--hauteurCase); 
-    z-index: 5;
+}
+
+main.debug .snake-block::before, main.debug .apple::before, 
+main.debug .snake-block::after, main.debug .apple::after {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-size: 0.8rem;
+}
+
+main.debug .snake-block::before, main.debug .apple::before {
+    counter-reset: xstr var(--x);
+    content: 'x' counter(xstr);
+    top: 0;
+}
+
+main.debug .snake-block::after, main.debug .apple::after {
+    counter-reset: ystr var(--y);
+    content: 'y' counter(ystr);
+    bottom: 0;
 }
 
 #snake-head {
@@ -39,10 +81,12 @@ main {
 
 .snake-block {
     background-color: green;
+    z-index: 5;
 }
 
 .apple {
-    background-color: lightgoldenrodyellow;
+    background-color: lightcoral;
+    border-radius: 100%;
 }
 
 .game-over {
@@ -52,7 +96,6 @@ main {
     transform: translate(-50%, -50%);
     font-size: 2rem;
     color: black;
-    font-family: "Press Start 2P", arial, sans-serif;
     white-space: nowrap;
     z-index: 100;
 }

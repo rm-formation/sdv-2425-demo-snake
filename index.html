@@ -2,12 +2,22 @@
 <html>
     <head>
         <link rel="stylesheet" href="style.css">
-        <script defer src="script.js"></script>
+        <script defer src="script.ts"></script>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     </head>
     <body>
+        <section class="settings">
+            <div class="game active">game</div>
+            <div class="pause">pause</div>
+            <div class="auto">auto</div>
+            <div class="autoRestart">autoRestart</div>
+            <div class="debug">debug</div>
+            <div class="gameSpeed">Game speed : <span></span></div>
+            <div class="gameSpeedPlus">Set faster</div>
+            <div class="gameSpeedMinus">Set slower</div>
+        </section>
         <main>
             <div id="snake-head" class="snake-block"></div>
         </main>
