@@ -3,11 +3,11 @@ body {
     margin: 0;
     background-color: lightblue;
 
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
     font-family: "Press Start 2P", arial, sans-serif;
+}
+
+.settings {
+    padding: 0.5rem;
 }
 
 .settings > div {
@@ -26,7 +26,10 @@ main {
     --gridSize: 0;
     --hauteurMain: 50vh;
     --hauteurCase: calc(var(--hauteurMain) / var(--gridSize));
-    position: relative;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     height: var(--hauteurMain);
     width: var(--hauteurMain);
     background-color: lightgrey;

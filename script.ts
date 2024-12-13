@@ -23,6 +23,8 @@ class GM {
     private static gameSpeedSpan = <HTMLElement>document.querySelector(".settings .gameSpeed span");
     private static gameSpeedPlusDiv = <HTMLElement>document.querySelector(".settings .gameSpeedPlus");
     private static gameSpeedMinusDiv = <HTMLElement>document.querySelector(".settings .gameSpeedMinus");
+    private static scoreSpan = <HTMLElement>document.querySelector(".score span");
+    private static highscoreSpan = <HTMLElement>document.querySelector(".highscore span");
 
     private static _game = true;
     static get game() {
@@ -94,6 +96,29 @@ class GM {
         this.gameSpeedSpan.innerText = value.toString();
     }
 
+    private static _score:number = 0;
+    static get score() {
+        return this._score;
+    }
+    static set score(value:number) {
+        this._score = value;
+        this.scoreSpan.innerText = value.toString();
+
+        const currentHighscore = this.highscore;
+        if (currentHighscore === null || value > currentHighscore) {
+            this.highscore = value;
+        }
+    }
+
+    static get highscore() {
+        return this.loadData<number>("highscore")!;
+    }
+
+    static set highscore(value:number) {
+        this.saveData("highscore", value);
+        this.highscoreSpan.innerText = value.toString();
+    }
+
     private static saveData<T>(key:string, val:T) {
         localStorage.setItem(key, JSON.stringify(val));
     }
@@ -153,10 +178,17 @@ class GM {
         this.gameSpeedMinusDiv.addEventListener("click", ()=>{
             this.gameSpeed += 10;
         });
+
+        const currentHighscore = this.highscore;
+        if (currentHighscore) {
+            this.highscore = currentHighscore;
+        }
     }
 }
 
 class GameElement {
+    static newId = 0;
+    id:number = ++ GameElement.newId;
     type:GameElementType;
     pos:Position;
     prevPos:Position = {
@@ -193,12 +225,13 @@ const gridSize = 10;
 const mainElement:HTMLElement = document.querySelector("main")!;
 mainElement.style.setProperty("--gridSize", gridSize.toString());
 
-const snakeHead = new GameElement(
-    GameElementType.snakeHead, 
-    <HTMLElement>document.querySelector("#snake-head"), 
-    {x: 0, y: 0},
-    1
-);
+let snakeHead = createSnakeHead();
+
+type State = {
+    score: number,
+    elementsJSON: string,
+}
+const stateHistory:Array<State> = [];
 
 const appleApparitionFrequency = 15;
 const maxConcurrentApple = 2;
@@ -226,6 +259,8 @@ function tick() {
     if (GM.auto) {
         tickAuto();
     }
+
+    saveState();
 
     if (GM.game && !GM.pause) {
         tickTimeout = setTimeout(tick, GM.gameSpeed);
@@ -270,6 +305,10 @@ document.addEventListener("keydown", function(event) {
             if (GM.pause) {
                 tick();
             }
+            break;
+        case "y":
+        case "Y":
+            popState();
             break;
         case "d":
         case "D":
@@ -372,15 +411,15 @@ function updateApples() {
     }
 }
 
-function addApple() {
-    const appleDiv = document.createElement("div");
-    appleDiv.classList.add("apple");
-    mainElement.append(appleDiv);
-
+function addApple(position?:Position) {
     const appleGameElement = new GameElement(
         GameElementType.apple,
-        appleDiv,
+        createAppleElement(),
     );
+
+    if (position) {
+        appleGameElement.pos = position;
+    }
 
     refreshElementSprite(appleGameElement);
 
@@ -432,6 +471,7 @@ function checkCollisions() {
             apple.element?.remove();
             addApple();
             growSnake();
+            GM.score++;
             break;
         }
     }
@@ -449,13 +489,9 @@ function growSnake() {
         position = clonePosition(tailElements[tailElements.length - 1].prevPos);
     }
 
-    const tailDiv = document.createElement("div");
-    tailDiv.classList.add("snake-block");
-    mainElement.append(tailDiv);
-
     const newTailElement = new GameElement(
         GameElementType.snakeTail,
-        tailDiv,
+        createSnakeBlockElement(),
         position,
         snakeHead.velocity.speed,
     );
@@ -568,9 +604,85 @@ function nextSimulatedPosIsSafe(currentPos:Position, velocity:Velocity) {
     //Create a function "calculateSnakePos in x tick" ?
 }
 
+function isPositionInADeadEnd(position:Position, enteringDirection:Direction) {
+    
+}
+
 function clonePosition(position:Position) {
     return {
         x: position.x,
         y: position.y,
     }
+}
+
+function saveState() {
+    const state:State = {
+        score: GM.score,
+        elementsJSON: JSON.stringify(Array.from(gameElementsByPosition.values())),
+    };
+    stateHistory.push(state);
+}
+
+function popState() {
+    const lastState = stateHistory.pop();
+    if (!lastState) {
+        return;
+    }
+    applyState(lastState);
+}
+
+function applyState(state:State) {
+    snakeHead.element.remove();
+    gameElementsByPosition.forEach(ge=>{
+        ge.element.remove();
+    });
+    gameElementsByPosition.clear();
+    appleElements = [];
+    tailElements = [];
+
+    const stateElements:Array<GameElement> = JSON.parse(state.elementsJSON);
+    appleElements = stateElements.filter(ge=>ge.type === GameElementType.apple);
+    appleElements.sort((g1, g2)=>g1.id - g2.id);
+    appleElements.forEach(ge=>{
+        ge.element = createAppleElement();
+        refreshElementSprite(ge);
+    });
+    tailElements = stateElements.filter(ge=>ge.type === GameElementType.snakeTail);
+    tailElements.sort((g1, g2)=>g1.id - g2.id);
+    tailElements.forEach(ge=>{
+        ge.element = createSnakeBlockElement();
+        refreshElementSprite(ge);
+    });
+    snakeHead = stateElements.find(ge=>ge.type === GameElementType.snakeHead)!;
+    snakeHead.element = createSnakeHeadElement();
+    refreshElementSprite(snakeHead);
+}
+
+function createSnakeBlockElement() {
+    const div = document.createElement("div");
+    div.classList.add("snake-block");
+    mainElement.append(div);
+    return div;
+}
+
+function createSnakeHeadElement() {
+    const div = createSnakeBlockElement();
+    div.id = "snake-head";
+    return div;
+}
+
+function createSnakeHead() {
+    return new GameElement(
+        GameElementType.snakeHead, 
+        createSnakeHeadElement(), 
+        {x: 0, y: 0},
+        1
+    );
+}
+
+function createAppleElement() {
+    const appleDiv = document.createElement("div");
+    appleDiv.classList.add("apple");
+    mainElement.append(appleDiv);
+    return appleDiv;
 }
